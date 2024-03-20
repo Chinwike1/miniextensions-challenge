@@ -13,6 +13,8 @@ import LoadingButton from '@/components/ui/LoadingButton';
 import SignUpModal from '@/components/ui/SignUpModal';
 import { loginWithEmail, useIsLoginWithEmailLoading } from '@/components/redux/auth/loginWithEmail';
 import { LoadingStateTypes } from '@/components/redux/types';
+import PhoneVerificationInput from '@/components/ui/PhoneVerificationInput';
+// import useAuthPropertyExists from '@/hooks/useAuthPropertyExists';
 
 export const googleLoginProvider = new GoogleAuthProvider();
 
@@ -27,6 +29,8 @@ const LoginPage: NextPage = () => {
 
     const [showRegistration, setshowRegistration] = useState(false);
     const router = useRouter();
+
+    // const { emailExists, phoneExists } = useAuthPropertyExists();
 
     // Realtime validation to enable submit button
     useEffect(() => {
@@ -47,6 +51,9 @@ const LoginPage: NextPage = () => {
             })
         );
     }, [email, password, dispatch]);
+
+    // console.log('Email exists: ', emailExists);
+    // console.log('Phone exists: ', phoneExists);
 
     if (auth.type === LoadingStateTypes.LOADING) {
         return <Spinner />;
@@ -92,6 +99,15 @@ const LoginPage: NextPage = () => {
                         >
                             Sign In
                         </LoadingButton>
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center">
+                                <div className="w-full border-t border-gray-300" />
+                            </div>
+                            <div className="relative flex justify-center text-sm">
+                                <span className="bg-white px-2 text-gray-500">Or login with</span>
+                            </div>
+                        </div>
+                        <PhoneVerificationInput />
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
                                 <div className="w-full border-t border-gray-300" />

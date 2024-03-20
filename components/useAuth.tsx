@@ -1,4 +1,4 @@
-import { User } from 'firebase/auth';
+import { User, Auth, getAuth } from 'firebase/auth';
 import React from 'react';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import Spinner from './Spinner';
@@ -18,6 +18,18 @@ export type AuthContextType =
           user: User;
       };
 
+export type AuthInstanceType =
+    | {
+          type: LoadingStateTypes.LOADING;
+      }
+    | {
+          type: LoadingStateTypes.NOT_LOADED;
+      }
+    | {
+          type: LoadingStateTypes.LOADED;
+          auth: Auth;
+      };
+
 export const useAuth = (): AuthContextType => {
     const [user, loading] = useAuthState(firebaseAuth);
 
@@ -32,6 +44,19 @@ export const useAuth = (): AuthContextType => {
         : {
               type: LoadingStateTypes.LOADED,
               user: user,
+          };
+};
+
+export const useGetAuth = (): AuthInstanceType => {
+    const auth = getAuth();
+
+    return auth == null
+        ? {
+              type: LoadingStateTypes.NOT_LOADED,
+          }
+        : {
+              type: LoadingStateTypes.LOADED,
+              auth: auth,
           };
 };
 

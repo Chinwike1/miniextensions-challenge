@@ -10,18 +10,19 @@ import { showToast } from '@/components/redux/toast/toastSlice';
 import Input from '@/components/ui/Input';
 import LoadingButton from '@/components/ui/LoadingButton';
 import Logout from './Logout';
-import { useAuth } from '../useAuth';
+import { useAuth, useGetAuth } from '../useAuth';
 import { LoadingStateTypes } from '../redux/types';
 import {
     sendVerificationCode,
+    verifyPhoneNumber,
     useSendVerificationCodeLoading,
     useVerifyPhoneNumberLoading,
-    verifyPhoneNumber,
 } from '../redux/auth/verifyPhoneNumber';
 
 const PhoneVerification = () => {
     const dispatch = useAppDispatch();
     const auth = useAuth();
+    const authInstance = useGetAuth();
     const [phoneNumber, setPhoneNumber] = useState('');
     const [OTPCode, setOTPCode] = useState('');
     const [show, setShow] = useState(false);
@@ -34,14 +35,18 @@ const PhoneVerification = () => {
     const [verificationId, setVerificationId] = useState('');
     const router = useRouter();
 
+    // use fake Recaptcha for testing purposes
+    firebaseAuth.settings.appVerificationDisabledForTesting = true;
+
     // Sending OTP and storing id to verify it later
     const handleSendVerification = async () => {
-        if (auth.type !== LoadingStateTypes.LOADED) return;
+        if (authInstance.type !== LoadingStateTypes.LOADED) return;
 
         dispatch(
             sendVerificationCode({
                 phoneNumber,
                 auth,
+                authInstance,
                 recaptcha,
                 recaptchaResolved,
                 callback: (result) => {
@@ -58,10 +63,11 @@ const PhoneVerification = () => {
 
     // Validating the filled OTP by user
     const ValidateOtp = async () => {
-        if (auth.type !== LoadingStateTypes.LOADED) return;
+        if (authInstance.type !== LoadingStateTypes.LOADED) return;
         dispatch(
             verifyPhoneNumber({
                 auth,
+                authInstance,
                 OTPCode,
                 verificationId,
                 callback: (result) => {
@@ -97,7 +103,7 @@ const PhoneVerification = () => {
         captcha.render();
 
         setRecaptcha(captcha);
-    }, []);
+    }, [dispatch]);
 
     return (
         <div className="flex items-center justify-center min-h-full px-4 py-12 sm:px-6 lg:px-8">
@@ -109,7 +115,7 @@ const PhoneVerification = () => {
                         alt="Workflow"
                     />
                     <h2 className="mt-6 text-3xl font-extrabold text-center text-gray-900">
-                        Sign in to your account
+                        Next, add a phone number
                     </h2>
                 </div>
 

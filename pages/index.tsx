@@ -1,23 +1,28 @@
 import Head from 'next/head';
 import styles from '@/styles/Home.module.css';
-import { AuthGuard, useAuth } from '@/components/useAuth';
+import { AuthGuard } from '@/components/useAuth';
 import Logout from '@/components/ui/Logout';
 import { useEffect } from 'react';
-import { LoadingStateTypes } from '@/components/redux/types';
 import PhoneVerification from '@/components/ui/PhoneVerification';
 import { useHomePage } from '@/components/redux/homePage/homePageSelectors';
 import { fetchHomePageData } from '@/components/redux/homePage/fetchHomePageData';
 import { useAppDispatch } from '@/components/redux/store';
+import EmailVerification from '@/components/ui/EmailVerification';
+import useAuthPropertyExists from '@/hooks/useAuthPropertyExists';
 
 export function Home() {
     const dispatch = useAppDispatch();
-    const auth = useAuth();
     /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
     const homePageData = useHomePage();
 
+    const { emailExists, phoneExists } = useAuthPropertyExists();
+
     useEffect(() => {
         dispatch(fetchHomePageData());
-    }, []);
+    }, [dispatch]);
+
+    // console.log('Email exists: ', emailExists);
+    // console.log('Phone exists: ', phoneExists);
 
     return (
         <div className={styles.container}>
@@ -25,12 +30,9 @@ export function Home() {
                 <title>Create Next App</title>
                 <link rel="icon" href="/favicon.ico" />
             </Head>
-
-            {auth.type === LoadingStateTypes.LOADED &&
-            auth.user != null &&
-            auth.user.phoneNumber == null ? (
-                <PhoneVerification />
-            ) : (
+            {emailExists && !phoneExists && <PhoneVerification />}
+            {phoneExists && !emailExists && <EmailVerification />}
+            {phoneExists && emailExists && (
                 <main className={styles.main}>
                     <h1 className={styles.title}>
                         Welcome to <a href="https://nextjs.org">Next.js!</a>
