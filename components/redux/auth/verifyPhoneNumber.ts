@@ -118,23 +118,18 @@ export const verifySignInWithPhone = createAsyncThunk(
             return;
 
         try {
-            if (
-                args.authInstance.type === LoadingStateTypes.LOADED &&
-                args.authInstance.auth !== null
-            ) {
-                const credential = PhoneAuthProvider.credential(args.verificationId, args.OTPCode);
-                await signInWithCredential(args.authInstance.auth, credential);
-            }
-
-            firebaseAuth.currentUser?.reload();
+            if (args.authInstance.type !== LoadingStateTypes.LOADED) return;
+            const credential = PhoneAuthProvider.credential(args.verificationId, args.OTPCode);
+            await signInWithCredential(args.authInstance.auth, credential);
 
             dispatch(
                 showToast({
-                    message: 'Logged in Successfully',
+                    message: 'Logged in Successfully!',
                     type: 'success',
                 })
             );
 
+            firebaseAuth.currentUser?.reload();
             args.callback({ type: 'success' });
         } catch (error: any) {
             dispatch(
@@ -289,5 +284,15 @@ export const useSendVerificationCodeLoading = () => {
 
 export const useVerifyPhoneNumberLoading = () => {
     const loading = useSelector((state: RootState) => state.loading.verifyPhoneNumber);
+    return loading;
+};
+
+export const useSignInWithPhoneLoading = () => {
+    const loading = useSelector((state: RootState) => state.loading.signInWithPhone);
+    return loading;
+};
+
+export const useVerifySignInWithPhoneLoading = () => {
+    const loading = useSelector((state: RootState) => state.loading.verifySignInWithPhone);
     return loading;
 };

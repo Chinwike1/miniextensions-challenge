@@ -12,8 +12,8 @@ import { useAuth, useGetAuth } from '../useAuth';
 import { LoadingStateTypes } from '../redux/types';
 import {
     signInWithPhone,
-    useSendVerificationCodeLoading,
-    useVerifyPhoneNumberLoading,
+    useSignInWithPhoneLoading,
+    useVerifySignInWithPhoneLoading,
     verifySignInWithPhone,
 } from '../redux/auth/verifyPhoneNumber';
 
@@ -26,8 +26,8 @@ const PhoneVerificationInput = () => {
     const [disableSubmit, setDisableSubmit] = useState(true);
     const [show, setShow] = useState(false);
 
-    const sendVerificationLoading = useSendVerificationCodeLoading();
-    const verifyPhoneNumberLoading = useVerifyPhoneNumberLoading();
+    const signInWithPhoneLoading = useSignInWithPhoneLoading();
+    const verifySignInWithPhoneLoading = useVerifySignInWithPhoneLoading();
 
     const [recaptcha, setRecaptcha] = useState<RecaptchaVerifier | null>(null);
     const [recaptchaResolved, setRecaptchaResolved] = useState(false);
@@ -126,9 +126,9 @@ const PhoneVerificationInput = () => {
                 />
                 <LoadingButton
                     onClick={handleSendVerification}
-                    loading={sendVerificationLoading}
-                    disabled={disableSubmit}
-                    loadingText="Sending OTP"
+                    loading={signInWithPhoneLoading}
+                    disabled={disableSubmit || signInWithPhoneLoading}
+                    loadingText="Sending OTP..."
                 >
                     Send OTP
                 </LoadingButton>
@@ -147,10 +147,10 @@ const PhoneVerificationInput = () => {
                             placeholder="Enter your OTP"
                             onChange={(e) => setOTPCode(e.target.value)}
                         />
-
                         <LoadingButton
                             onClick={ValidateOtp}
-                            loading={verifyPhoneNumberLoading}
+                            loading={verifySignInWithPhoneLoading}
+                            disabled={disableSubmit || verifySignInWithPhoneLoading}
                             loadingText="Verifying..."
                         >
                             Verify

@@ -14,17 +14,23 @@ import Logout from './Logout';
 import Input from './Input';
 import LoadingButton from './LoadingButton';
 import { isEmail } from 'validator';
-import { useIsLoginWithEmailLoading } from '../redux/auth/loginWithEmail';
-// import { useAppDispatch } from '../redux/store';
+import {
+    linkWithEmailProvider,
+    useLinkWithEmailProviderLoading,
+} from '../redux/auth/loginWithEmail';
+import { useAppDispatch } from '../redux/store';
+import { showToast } from '../redux/toast/toastSlice';
 
 function EmailVerification() {
+    const dispatch = useAppDispatch();
     const auth = useAuth();
     const router = useRouter();
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [disableSubmit, setDisableSubmit] = useState(true);
-    const isLoading = useIsLoginWithEmailLoading();
+
+    const linkWithEmailProviderLoading = useLinkWithEmailProviderLoading();
 
     // create new Email and Google Providers
     const credential = EmailAuthProvider.credential(email, password);
@@ -38,18 +44,20 @@ function EmailVerification() {
         }
     }, [email, password]);
 
-    // TODO: convert function to use Redux Thunk
     const linkWithGoogle = async () => {
+        if (auth.type !== LoadingStateTypes.LOADED) return;
         try {
-            if (auth.type === LoadingStateTypes.LOADED && auth.user !== null) {
-                await linkWithPopup(auth.user, provider);
-                router.refresh();
-            }
+            const result = await linkWithPopup(auth.user, provider);
+            const credential = GoogleAuthProvider.credentialFromResult(result);
+            const token = credential?.accessToken;
+            const user = result.user;
+            router.refresh();
+            console.log(user, token);
         } catch (error) {
             console.log(error);
         }
     };
-    // TODO: convert function to use Redux Thunk
+
     const linkEmailAddress = async () => {
         try {
             if (auth.type === LoadingStateTypes.LOADED && auth.user !== null) {
@@ -59,6 +67,24 @@ function EmailVerification() {
         } catch (error) {
             console.log(error);
         }
+        if (auth.type !== LoadingStateTypes.LOADED) return;
+        dispatch(
+            linkWithEmailProvider({
+                auth,
+                credential,
+                callback: (result) => {
+                    if (result.type === 'error') return;
+                    dispatch(
+                        showToast({
+                            message: 'Your email address has been linked successfully!',
+                            type: 'success',
+                        })
+                    );
+                    // reload auth user object
+                    router.refresh();
+                },
+            })
+        );
     };
 
     return (
@@ -118,8 +144,8 @@ function EmailVerification() {
                         />
                         <LoadingButton
                             onClick={linkEmailAddress}
-                            disabled={disableSubmit}
-                            loading={isLoading}
+                            disabled={disableSubmit || linkWithEmailProviderLoading}
+                            loading={linkWithEmailProviderLoading}
                         >
                             Add Email
                         </LoadingButton>
