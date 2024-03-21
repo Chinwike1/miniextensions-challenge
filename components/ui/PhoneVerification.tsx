@@ -36,7 +36,7 @@ const PhoneVerification = () => {
     const router = useRouter();
 
     // use fake Recaptcha for testing purposes
-    firebaseAuth.settings.appVerificationDisabledForTesting = true;
+    // firebaseAuth.settings.appVerificationDisabledForTesting = true;
 
     // Sending OTP and storing id to verify it later
     const handleSendVerification = async () => {
@@ -98,6 +98,7 @@ const PhoneVerification = () => {
                     })
                 );
             },
+            isolated: false,
         });
 
         captcha.render();

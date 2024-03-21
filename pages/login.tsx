@@ -2,7 +2,7 @@
 import { NextPage } from 'next';
 import { GoogleAuthProvider } from 'firebase/auth';
 import { useCallback, useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import ToastBox from '@/components/ui/ToastBox';
 import { useAppDispatch } from '@/components/redux/store';
 import { useAuth } from '@/components/useAuth';
@@ -13,7 +13,7 @@ import LoadingButton from '@/components/ui/LoadingButton';
 import SignUpModal from '@/components/ui/SignUpModal';
 import { loginWithEmail, useIsLoginWithEmailLoading } from '@/components/redux/auth/loginWithEmail';
 import { LoadingStateTypes } from '@/components/redux/types';
-import PhoneVerificationInput from '@/components/ui/PhoneVerificationInput';
+import PhoneVerificationInput from '@/components/ui/LoginPhoneInput';
 // import useAuthPropertyExists from '@/hooks/useAuthPropertyExists';
 
 export const googleLoginProvider = new GoogleAuthProvider();
@@ -29,6 +29,7 @@ const LoginPage: NextPage = () => {
 
     const [showRegistration, setshowRegistration] = useState(false);
     const router = useRouter();
+    const pathname = usePathname();
 
     // const { emailExists, phoneExists } = useAuthPropertyExists();
 
@@ -41,6 +42,20 @@ const LoginPage: NextPage = () => {
         }
     }, [email, password]);
 
+    // Use URLSearchParams to track the status of Signup modal. This will be used to mount/unmount recaptcha elements in the Login/Signup Phone Input components
+    useEffect(() => {
+        const params = new URLSearchParams();
+
+        // update the 'sigup-modal' parameter based on modal status — showRegistration
+        if (showRegistration) {
+            params.set('signup-modal', 'open');
+        } else {
+            params.set('signup-modal', 'closed');
+        }
+
+        router.push(`${pathname}?${params}`);
+    }, [showRegistration, pathname, router]);
+
     // Signing in with email and password and redirecting to home page
     const signInWithEmail = useCallback(async () => {
         await dispatch(
@@ -51,9 +66,6 @@ const LoginPage: NextPage = () => {
             })
         );
     }, [email, password, dispatch]);
-
-    // console.log('Email exists: ', emailExists);
-    // console.log('Phone exists: ', phoneExists);
 
     if (auth.type === LoadingStateTypes.LOADING) {
         return <Spinner />;

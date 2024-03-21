@@ -3,7 +3,7 @@ import { RecaptchaVerifier } from 'firebase/auth';
 import { firebaseAuth } from '@/components/firebase/firebaseAuth';
 import { useEffect, useState } from 'react';
 import Modal from '@/components/ui/Modal';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAppDispatch } from '@/components/redux/store';
 import { showToast } from '@/components/redux/toast/toastSlice';
 import Input from '@/components/ui/Input';
@@ -17,12 +17,12 @@ import {
     verifySignInWithPhone,
 } from '../redux/auth/verifyPhoneNumber';
 
-const PhoneVerificationInput = () => {
+const SignupPhoneInput = () => {
     const dispatch = useAppDispatch();
     const auth = useAuth();
     const authInstance = useGetAuth();
     const [phoneNumber, setPhoneNumber] = useState('');
-    const [OTPCode, setOTPCode] = useState('123456');
+    const [OTPCode, setOTPCode] = useState('');
     const [disableSubmit, setDisableSubmit] = useState(true);
     const [show, setShow] = useState(false);
 
@@ -35,7 +35,7 @@ const PhoneVerificationInput = () => {
     const router = useRouter();
 
     // use fake Recaptcha for testing purposes
-    firebaseAuth.settings.appVerificationDisabledForTesting = true;
+    // firebaseAuth.settings.appVerificationDisabledForTesting = true;
 
     // Realtime validation to enable submit button
     useEffect(() => {
@@ -46,29 +46,33 @@ const PhoneVerificationInput = () => {
         }
     }, [phoneNumber]);
 
-    // generating the recaptcha on OTP field focus
-    const generateRecaptcha = () => {
-        const captcha = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
-            size: 'normal',
-            callback: () => {
-                setRecaptchaResolved(true);
-            },
+    const searchParams = useSearchParams();
 
-            'expired-callback': () => {
-                setRecaptchaResolved(false);
-                dispatch(
-                    showToast({
-                        message: 'Recaptcha Expired, please verify it again',
-                        type: 'info',
-                    })
-                );
-            },
-        });
+    // generate the recaptcha only when the signup modal is open
+    useEffect(() => {
+        if (searchParams.get('signup-modal') === 'open') {
+            const captcha = new RecaptchaVerifier(firebaseAuth, 'recaptcha-container', {
+                size: 'normal',
+                callback: () => {
+                    setRecaptchaResolved(true);
+                },
 
-        captcha.render();
+                'expired-callback': () => {
+                    setRecaptchaResolved(false);
+                    dispatch(
+                        showToast({
+                            message: 'Recaptcha Expired, please verify it again',
+                            type: 'info',
+                        })
+                    );
+                },
+            });
 
-        setRecaptcha(captcha);
-    };
+            captcha.render();
+
+            setRecaptcha(captcha);
+        }
+    }, [searchParams, dispatch]);
 
     // Sending OTP and storing id to verify it later
     const handleSendVerification = async () => {
@@ -119,7 +123,6 @@ const PhoneVerificationInput = () => {
                 <Input
                     value={phoneNumber}
                     onChange={(e) => setPhoneNumber(e.target.value)}
-                    onFocus={generateRecaptcha}
                     placeholder="Phone number"
                     type="text"
                     required
@@ -133,7 +136,8 @@ const PhoneVerificationInput = () => {
                     Send OTP
                 </LoadingButton>
             </div>
-            <div id="recaptcha-container" />
+            {/* unmount the signup recaptcha if signupmodal is closed */}
+            {searchParams.get('signup-modal') === 'open' ? <div id="recaptcha-container" /> : ''}
 
             <Modal show={show} setShow={setShow}>
                 <div className="w-fit bg-white py-3 rounded-lg">
@@ -162,4 +166,4 @@ const PhoneVerificationInput = () => {
     );
 };
 
-export default PhoneVerificationInput;
+export default SignupPhoneInput;
